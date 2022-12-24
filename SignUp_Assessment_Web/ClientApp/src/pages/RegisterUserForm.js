@@ -60,6 +60,7 @@ const RegisterUserForm = () => {
             );
             setShowSuccessAlert(true);
             setShowFailureAlert(false);
+            resetForm();
         } else {
             if (response.status === 400) {
                 const responseData = await response.json();
@@ -75,9 +76,9 @@ const RegisterUserForm = () => {
                     }
                 }
                 setErrorMessages([...errors]);
-                setShowSuccessAlert(false);
             }
 
+            setShowSuccessAlert(false);
             setShowFailureAlert(true);
         }
 
