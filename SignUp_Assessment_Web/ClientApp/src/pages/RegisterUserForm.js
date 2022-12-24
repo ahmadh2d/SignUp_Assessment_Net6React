@@ -8,18 +8,18 @@ import {
     Row,
     Col,
     Container,
-    Alert,
-    FormFeedback
+    Alert
 } from "reactstrap";
+import ErrorMessagesBlock from "../components/ErrorMessagesBlock";
 import { USER_REGISTER_URL } from "../config";
 
 const RegisterUserForm = () => {
     const initialFormState = {
-        firstName: null,
-        lastName: null,
-        email: null,
-        password: null,
-        confirmPassword: null
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
     };
     const [formData, setFormData] = useState(initialFormState);
     const [disableSubmitButton, setDisableSubmitButton] = useState(false);
@@ -53,7 +53,6 @@ const RegisterUserForm = () => {
                 Accept: "application/json",
             },
         });
-        const responseData = await response.json();
 
         if (response.status === 200) {
             console.log(
@@ -62,18 +61,24 @@ const RegisterUserForm = () => {
             setShowSuccessAlert(true);
             setShowFailureAlert(false);
         } else {
-            console.log(`Failed! User not registered`);
-            const errors = [];
-            if (responseData.errors) {
-              for (const key in responseData.errors) {
-                if (Object.hasOwnProperty.call(responseData.errors, key)) {
-                  errors.push(responseData.errors[key]);
+            if (response.status === 400) {
+                const responseData = await response.json();
+                console.log(`Failed! User not registered`);
+                const errors = [];
+                if (responseData.errors) {
+                    for (const key in responseData.errors) {
+                        if (
+                            Object.hasOwnProperty.call(responseData.errors, key)
+                        ) {
+                            errors.push(responseData.errors[key]?.join(" "));
+                        }
+                    }
                 }
-              }
+                setErrorMessages([...errors]);
+                setShowSuccessAlert(false);
             }
-            setErrorMessages([...errors] );
+
             setShowFailureAlert(true);
-            setShowSuccessAlert(false);
         }
 
         setDisableSubmitButton(false);
@@ -82,18 +87,25 @@ const RegisterUserForm = () => {
     return (
         <>
             <Container className="col-sm-12 col-md-6 offset-md-3">
-                <Alert color="success" isOpen={showSuccessAlert} toggle={onSuccessAlertDismiss}>
-                    Success! User is registered.
+                <Alert
+                    color="success"
+                    isOpen={showSuccessAlert}
+                    toggle={onSuccessAlertDismiss}
+                >
+                    Success! User is registered now.
                 </Alert>
-                <Alert color="danger" isOpen={showFailureAlert} toggle={onFailureAlertDismiss}>
-                    Failed! User not registered.
+                <Alert
+                    color="danger"
+                    isOpen={showFailureAlert}
+                    toggle={onFailureAlertDismiss}
+                >
+                    Failed! User account not created.
                 </Alert>
+
                 <h2 className="mb-5 text-center">Create SHAPE Account</h2>
-                {
-                  errorMessages.map((error, index) => (
-                    <p key={index}>{error}</p>
-                  ))
-                }
+
+                {errorMessages?.length > 0 && <ErrorMessagesBlock errorMessages={errorMessages} />}
+
                 <Form>
                     <Row>
                         <Col md="6">
@@ -106,9 +118,6 @@ const RegisterUserForm = () => {
                                     value={formData.firstName}
                                     onChange={onUpdateField}
                                 />
-                                <FormFeedback>
-                                  
-                                </FormFeedback>
                             </FormGroup>
                         </Col>
                         <Col md="6">
